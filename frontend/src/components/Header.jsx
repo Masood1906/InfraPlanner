@@ -57,9 +57,11 @@ export default function Header() {
           <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px', color: 'var(--text-primary)' }}>
             InfraPlanner <span style={{ color: 'var(--accent)' }}>AI</span>
           </div>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-            Kubernetes Infrastructure Intelligence
-          </div>
+          {!isMobile && (
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
+              Kubernetes Infrastructure Intelligence
+            </div>
+          )}
         </div>
       </div>
 

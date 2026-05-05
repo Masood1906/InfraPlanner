@@ -57,7 +57,6 @@ function useIsMobile() {
   return mobile
 }
 
-function FieldGroup({ icon: Icon, label, color, children }) {
 function FieldGroup({ icon: Icon, label, color, children, isMobile }) {
   return (
     <div style={{ marginBottom: 20 }}>
