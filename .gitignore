@@ -3,8 +3,8 @@
 .env.*
 !.env.example
 
-# registry — contains user-submitted router data, not source code
-graph/router_registry.json
+# registry — committed with curated seed routers, gitignored for local dev overrides
+# graph/router_registry.json
 
 # Python
 __pycache__/

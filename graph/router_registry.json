@@ -1,0 +1,50 @@
+[
+  {
+    "router_id": "juniper_mx10008",
+    "model": "Juniper MX10008",
+    "vendor": "Juniper",
+    "series": "MX10000",
+    "features": [
+      { "name": "Switching Capacity", "canonical_value": 192000.0, "canonical_unit": "Gbps" },
+      { "name": "Forwarding Rate",    "canonical_value": 12000.0,  "canonical_unit": "Mpps" },
+      { "name": "IPv4 Routes",        "canonical_value": 8000000.0,"canonical_unit": "count" },
+      { "name": "DRAM",               "canonical_value": 512.0,    "canonical_unit": "GB" }
+    ]
+  },
+  {
+    "router_id": "arista_7280cr3_96",
+    "model": "Arista 7280CR3-96",
+    "vendor": "Arista",
+    "series": "7280",
+    "features": [
+      { "name": "Switching Capacity", "canonical_value": 12800.0,  "canonical_unit": "Gbps" },
+      { "name": "Forwarding Rate",    "canonical_value": 4800.0,   "canonical_unit": "Mpps" },
+      { "name": "IPv4 Routes",        "canonical_value": 2000000.0,"canonical_unit": "count" },
+      { "name": "DRAM",               "canonical_value": 64.0,     "canonical_unit": "GB" }
+    ]
+  },
+  {
+    "router_id": "nokia_7750_sr_12",
+    "model": "Nokia 7750 SR-12",
+    "vendor": "Nokia",
+    "series": "7750",
+    "features": [
+      { "name": "Switching Capacity", "canonical_value": 6400.0,   "canonical_unit": "Gbps" },
+      { "name": "Forwarding Rate",    "canonical_value": 2400.0,   "canonical_unit": "Mpps" },
+      { "name": "IPv4 Routes",        "canonical_value": 4000000.0,"canonical_unit": "count" },
+      { "name": "DRAM",               "canonical_value": 128.0,    "canonical_unit": "GB" }
+    ]
+  },
+  {
+    "router_id": "huawei_netengine_ne40e",
+    "model": "Huawei NetEngine NE40E",
+    "vendor": "Huawei",
+    "series": "NetEngine",
+    "features": [
+      { "name": "Switching Capacity", "canonical_value": 2400.0,   "canonical_unit": "Gbps" },
+      { "name": "Forwarding Rate",    "canonical_value": 1800.0,   "canonical_unit": "Mpps" },
+      { "name": "IPv4 Routes",        "canonical_value": 2000000.0,"canonical_unit": "count" },
+      { "name": "DRAM",               "canonical_value": 64.0,     "canonical_unit": "GB" }
+    ]
+  }
+]
