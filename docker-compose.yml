@@ -1,0 +1,59 @@
+services:
+
+  falkordb:
+    image: falkordb/falkordb:latest
+    container_name: infra_falkordb
+    # Expose FalkorDB browser UI on localhost only — not to the public network
+    ports:
+      - "127.0.0.1:6379:6379"
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - falkordb_data:/data          # graph persists across restarts
+    networks:
+      - infra_net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  api:
+    build: .
+    container_name: infra_planner_api
+    ports:
+      - "${API_PORT:-8000}:8000"
+    env_file:
+      - .env
+    environment:
+      FALKOR_HOST: falkordb
+      FALKOR_PORT: 6379
+      REGISTRY_DIR: /app/registry
+    volumes:
+      # Bind-mount the local graph/ directory as the registry source.
+      # This means router_registry.json lives on your local disk (in git),
+      # survives docker compose down -v, and is never lost on rebuilds.
+      # The container writes saved routers directly to your local file.
+      - ./graph:/app/registry
+    networks:
+      - infra_net
+    depends_on:
+      falkordb:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+networks:
+  infra_net:
+    driver: bridge
+
+volumes:
+  falkordb_data:
+    driver: local

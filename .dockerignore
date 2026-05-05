@@ -1,0 +1,30 @@
+# Never copy stale bytecode into the image — it overrides source files
+# and causes ImportError for functions that exist in source but not in
+# the old .pyc compiled on a different Python version.
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Secrets — never bake into image
+.env
+.env.*
+
+# Dev/test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+tests/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Git
+.git/
+.gitignore
+
+# Docs
+*.md
