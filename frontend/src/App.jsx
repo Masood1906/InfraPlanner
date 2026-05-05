@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Header from './components/Header'
 import RouterForm from './components/RouterForm'
@@ -10,6 +10,16 @@ import ExplanationPanel from './components/ExplanationPanel'
 import GraphViewer from './components/GraphViewer'
 import { generatePlan } from './utils/api'
 import { LayoutDashboard, GitBranch } from 'lucide-react'
+
+function useIsMobile() {
+  const [mobile, setMobile] = useState(() => window.innerWidth < 768)
+  useEffect(() => {
+    const fn = () => setMobile(window.innerWidth < 768)
+    window.addEventListener('resize', fn)
+    return () => window.removeEventListener('resize', fn)
+  }, [])
+  return mobile
+}
 
 function Background() {
   return (
@@ -115,6 +125,8 @@ export default function App() {
     }
   }
 
+  const isMobile = useIsMobile()
+
   return (
     <div style={{ minHeight: '100vh', position: 'relative' }}>
       <Background />
@@ -123,16 +135,16 @@ export default function App() {
       <div style={{
         position: 'relative', zIndex: 1,
         maxWidth: 1400, margin: '0 auto',
-        padding: '88px 24px 40px',
+        padding: isMobile ? '76px 12px 40px' : '88px 24px 40px',
         display: 'grid',
-        gridTemplateColumns: activeTab === 'graph' ? '1fr' : '380px 1fr',
+        gridTemplateColumns: (activeTab === 'graph' || isMobile) ? '1fr' : '380px 1fr',
         gap: 24,
         alignItems: 'start',
       }}>
 
         {/* Left panel — only on plan tab */}
         {activeTab === 'plan' && (
-          <div style={{ position: 'sticky', top: 80 }}>
+          <div style={{ position: isMobile ? 'static' : 'sticky', top: 80 }}>
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
@@ -152,7 +164,7 @@ export default function App() {
           <div style={{
             display: 'flex', gap: 4, marginBottom: 24,
             background: 'var(--bg-card)', border: '1px solid var(--border)',
-            borderRadius: 12, padding: 4, width: 'fit-content',
+            borderRadius: 12, padding: 4, width: isMobile ? '100%' : 'fit-content',
           }}>
             {TABS.map(tab => {
               const Icon = tab.icon
@@ -164,8 +176,8 @@ export default function App() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '8px 18px', borderRadius: 9,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    padding: '8px 18px', borderRadius: 9, flex: isMobile ? 1 : undefined,
                     cursor: 'pointer', fontSize: 13, fontWeight: 500,
                     border: 'none', transition: 'all 0.2s',
                     background: active
@@ -318,7 +330,7 @@ export default function App() {
 
                       {/* Full plan — only shown when data quality passed */}
                       {plan.plan_status !== 'needs_review' && (
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 20, alignItems: 'start' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 280px', gap: 20, alignItems: 'start' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                             <div>
                               <div style={{ fontSize: 11, color: 'var(--text-muted)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 14 }}>

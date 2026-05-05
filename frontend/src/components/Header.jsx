@@ -3,8 +3,19 @@ import { Activity, Cpu, GitBranch } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { getHealth } from '../utils/api'
 
+function useIsMobile() {
+  const [mobile, setMobile] = useState(() => window.innerWidth < 768)
+  useEffect(() => {
+    const fn = () => setMobile(window.innerWidth < 768)
+    window.addEventListener('resize', fn)
+    return () => window.removeEventListener('resize', fn)
+  }, [])
+  return mobile
+}
+
 export default function Header() {
   const [health, setHealth] = useState(null)
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     let mounted = true
@@ -27,7 +38,7 @@ export default function Header() {
         background: 'rgba(5, 8, 16, 0.85)',
         backdropFilter: 'blur(20px)',
         borderBottom: '1px solid var(--border)',
-        padding: '0 2rem',
+        padding: isMobile ? '0 1rem' : '0 2rem',
         height: '64px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}
@@ -53,8 +64,8 @@ export default function Header() {
       </div>
 
       {/* Status */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-        {health && (
+      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '12px' : '24px' }}>
+        {health && !isMobile && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Cpu size={13} color="var(--text-muted)" />
             <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
@@ -76,17 +87,19 @@ export default function Header() {
             {health ? 'System Online' : 'Offline'}
           </span>
         </div>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '6px',
-          padding: '4px 12px', borderRadius: 20,
-          border: '1px solid var(--border)',
-          background: 'var(--bg-card)',
-        }}>
-          <Activity size={12} color="var(--accent)" />
-          <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, letterSpacing: '0.5px' }}>
-            GraphRAG
-          </span>
-        </div>
+        {!isMobile && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            padding: '4px 12px', borderRadius: 20,
+            border: '1px solid var(--border)',
+            background: 'var(--bg-card)',
+          }}>
+            <Activity size={12} color="var(--accent)" />
+            <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, letterSpacing: '0.5px' }}>
+              GraphRAG
+            </span>
+          </div>
+        )}
       </div>
     </motion.header>
   )

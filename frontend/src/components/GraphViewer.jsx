@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+
+function useIsMobile() {
+  const [mobile, setMobile] = useState(() => window.innerWidth < 768)
+  useEffect(() => {
+    const fn = () => setMobile(window.innerWidth < 768)
+    window.addEventListener('resize', fn)
+    return () => window.removeEventListener('resize', fn)
+  }, [])
+  return mobile
+}
 import { RefreshCw, ZoomIn, ZoomOut, Maximize2, Wifi, WifiOff, Lock, Unlock, GitBranch, Network } from 'lucide-react'
 import ForceGraph2D from 'react-force-graph-2d'
 import ReasoningChain from './ReasoningChain'
@@ -80,6 +90,7 @@ export default function GraphViewer({ highlightIds, newestRouterId, onBack, onCl
   const [frozen,    setFrozen]        = useState(false)
   const [hoveredLink, setHoveredLink] = useState(null)
   const [graphMode, setGraphMode]     = useState('reasoning')
+  const isMobile = useIsMobile()
 
   const fetchGraph = useCallback(async () => {
     setLoading(true)
@@ -234,25 +245,27 @@ export default function GraphViewer({ highlightIds, newestRouterId, onBack, onCl
           </div>
 
           <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-            {/* Layer axis */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0, paddingTop: 8, flexShrink: 0, width: 160 }}>
-              {LAYER_ORDER.filter(t => !FILTER_TYPES[filter] || FILTER_TYPES[filter].includes(t)).map(type => (
-                <div key={type} style={{
-                  height: 120, display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 8,
-                  borderLeft: `2px solid ${NODE_COLOR[type]}30`,
-                }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%',
-                    background: NODE_COLOR[type], boxShadow: `0 0 6px ${NODE_COLOR[type]}`, flexShrink: 0 }} />
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.3 }}>{type}</span>
-                </div>
-              ))}
-            </div>
+            {/* Layer axis — hidden on mobile */}
+            {!isMobile && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 0, paddingTop: 8, flexShrink: 0, width: 160 }}>
+                {LAYER_ORDER.filter(t => !FILTER_TYPES[filter] || FILTER_TYPES[filter].includes(t)).map(type => (
+                  <div key={type} style={{
+                    height: 120, display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 8,
+                    borderLeft: `2px solid ${NODE_COLOR[type]}30`,
+                  }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%',
+                      background: NODE_COLOR[type], boxShadow: `0 0 6px ${NODE_COLOR[type]}`, flexShrink: 0 }} />
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.3 }}>{type}</span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Graph canvas */}
             <div style={{
               flex: 1, background: 'var(--bg-card)', border: '1px solid var(--border)',
               borderRadius: 16, overflow: 'hidden', position: 'relative',
-              height: LAYER_ORDER.length * 120 + 40,
+              height: isMobile ? 420 : LAYER_ORDER.length * 120 + 40,
             }}>
               <AnimatePresence>
                 {loading && (

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle, XCircle, Shield, GitBranch, AlertTriangle, DatabaseZap, Check, Info } from 'lucide-react'
 import { persistRouter } from '../utils/api'
@@ -70,10 +70,21 @@ function evaluateSaveEligibility(plan, originalSpec) {
   return { canSave: true, blocked: false, alreadyInGraph: false, warning: null, reason: null }
 }
 
+function useIsMobile() {
+  const [mobile, setMobile] = useState(() => window.innerWidth < 768)
+  useEffect(() => {
+    const fn = () => setMobile(window.innerWidth < 768)
+    window.addEventListener('resize', fn)
+    return () => window.removeEventListener('resize', fn)
+  }, [])
+  return mobile
+}
+
 export default function PlanSummary({ plan, originalSpec, onSaved }) {
   const [saving, setSaving]       = useState(false)
   const [saved, setSaved]         = useState(false)
   const [saveError, setSaveError] = useState(null)
+  const isMobile = useIsMobile()
 
   if (!plan) return null
 
@@ -165,7 +176,7 @@ export default function PlanSummary({ plan, originalSpec, onSaved }) {
       }} />
 
       {/* Router identity + actions */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-start', justifyContent: 'space-between', marginBottom: 24, gap: 16 }}>
         <div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 6 }}>
             Deployment Plan For
@@ -184,7 +195,7 @@ export default function PlanSummary({ plan, originalSpec, onSaved }) {
           )}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMobile ? 'stretch' : 'flex-end', gap: 10 }}>
           {/* Status badge */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <StatusBadge />
@@ -323,7 +334,7 @@ export default function PlanSummary({ plan, originalSpec, onSaved }) {
       )}
 
       {/* Key metrics — always shown so user sees 0 clusters for needs_review */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)', gap: 12 }}>
         <Stat label="Clusters"   value={plan.cluster_count} color={needsReview ? 'var(--red)' : 'var(--accent)'}  delay={0.1} />
         <Stat label="Nodes"      value={totalNodes}          color={needsReview ? 'var(--red)' : 'var(--purple)'} delay={0.15} />
         <Stat label="Total vCPU" value={totalVcpu}           color={needsReview ? 'var(--red)' : 'var(--green)'}  delay={0.2} />

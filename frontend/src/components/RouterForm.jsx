@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Zap, Network, Database, MemoryStick, Hash, Layers, ChevronDown, ChevronUp, Send, RotateCcw } from 'lucide-react'
 
@@ -47,7 +47,18 @@ const EMPTY = {
   mac_addresses: { value: '', unit: 'count' },
 }
 
+function useIsMobile() {
+  const [mobile, setMobile] = useState(() => window.innerWidth < 768)
+  useEffect(() => {
+    const fn = () => setMobile(window.innerWidth < 768)
+    window.addEventListener('resize', fn)
+    return () => window.removeEventListener('resize', fn)
+  }, [])
+  return mobile
+}
+
 function FieldGroup({ icon: Icon, label, color, children }) {
+function FieldGroup({ icon: Icon, label, color, children, isMobile }) {
   return (
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
@@ -63,7 +74,7 @@ function FieldGroup({ icon: Icon, label, color, children }) {
           {label}
         </span>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
         {children}
       </div>
     </div>
@@ -213,6 +224,7 @@ export default function RouterForm({ onSubmit, loading }) {
   const [showOptional, setShowOptional] = useState(false)
   const [activePreset, setActivePreset] = useState(null)
   const [validationError, setValidationError] = useState(null)
+  const isMobile = useIsMobile()
 
   const setField = (key, val) => setForm(f => ({ ...f, [key]: val }))
   const setFeature = (key, val) => setForm(f => ({ ...f, [key]: { ...f[key], value: val } }))
@@ -280,7 +292,7 @@ export default function RouterForm({ onSubmit, loading }) {
 
       <form onSubmit={handleSubmit}>
         {/* Identity */}
-        <FieldGroup icon={Layers} label="Router Identity" color="var(--accent)">
+        <FieldGroup icon={Layers} label="Router Identity" color="var(--accent)" isMobile={isMobile}>
           <div style={{ gridColumn: '1 / -1' }}>
             <TextInput label="Model Name *" value={form.model} onChange={v => setField('model', v)} placeholder="e.g. Cisco 9300X" />
           </div>
@@ -289,12 +301,12 @@ export default function RouterForm({ onSubmit, loading }) {
         </FieldGroup>
 
         {/* Required specs */}
-        <FieldGroup icon={Network} label="Switching & Forwarding" color="var(--purple)">
+        <FieldGroup icon={Network} label="Switching & Forwarding" color="var(--purple)" isMobile={isMobile}>
           <Input label="Switching Capacity" required value={form.switching_cap.value} onChange={v => setFeature('switching_cap', v)} unit="Gbps" />
           <Input label="Forwarding Rate" required value={form.forwarding_rate.value} onChange={v => setFeature('forwarding_rate', v)} unit="Mpps" />
         </FieldGroup>
 
-        <FieldGroup icon={Database} label="Routing Scale" color="var(--green)">
+        <FieldGroup icon={Database} label="Routing Scale" color="var(--green)" isMobile={isMobile}>
           <Input label="IPv4 Routes" required value={form.ipv4_routes.value} onChange={v => setFeature('ipv4_routes', v)} unit="count" />
           <Input label="DRAM" required value={form.dram_gb.value} onChange={v => setFeature('dram_gb', v)} unit="GB" />
         </FieldGroup>
@@ -322,11 +334,11 @@ export default function RouterForm({ onSubmit, loading }) {
               exit={{ height: 0, opacity: 0 }}
               style={{ overflow: 'hidden' }}
             >
-              <FieldGroup icon={Zap} label="Stacking & VLANs" color="var(--yellow)">
+              <FieldGroup icon={Zap} label="Stacking & VLANs" color="var(--yellow)" isMobile={isMobile}>
                 <Input label="Stacking Bandwidth" value={form.stacking_bw.value} onChange={v => setFeature('stacking_bw', v)} unit="Gbps" />
                 <Input label="VLAN IDs" value={form.vlan_ids.value} onChange={v => setFeature('vlan_ids', v)} unit="count" />
               </FieldGroup>
-              <FieldGroup icon={Hash} label="MAC Addresses" color="var(--accent)">
+              <FieldGroup icon={Hash} label="MAC Addresses" color="var(--accent)" isMobile={isMobile}>
                 <Input label="MAC Addresses" value={form.mac_addresses.value} onChange={v => setFeature('mac_addresses', v)} unit="count" />
               </FieldGroup>
             </motion.div>
