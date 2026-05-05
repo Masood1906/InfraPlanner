@@ -143,9 +143,12 @@ def _check_model_name(spec: ParsedSpec) -> None:
             f"(e.g. Cisco, Juniper, Arista, Nokia)."
         )
 
-    # Reject if vendor field is a known non-networking brand
+    # Reject if vendor field is a known non-networking brand.
+    # Skip generic placeholders ("unknown", "none", "null") — these are the
+    # schema default when the user omits the optional vendor field.
+    _VENDOR_PLACEHOLDERS = frozenset({"unknown", "none", "null", ""})
     vendor_lower = (spec.vendor or "").lower().strip()
-    if vendor_lower and vendor_lower in _NON_ROUTER_BRANDS:
+    if vendor_lower and vendor_lower not in _VENDOR_PLACEHOLDERS and vendor_lower in _NON_ROUTER_BRANDS:
         raise ValueError(
             f"Vendor '{spec.vendor}' is not a networking vendor. "
             f"Please enter a real networking vendor (e.g. Cisco, Juniper, Arista)."
