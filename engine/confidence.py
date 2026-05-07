@@ -117,11 +117,21 @@ def compute_confidence(
     # ── Graph match ───────────────────────────────────────────────────────────
     graph_score = round(min(max(similarity_score, 0.0), 1.0), 4)
     if similarity_score >= 1.0:
-        breakdown.append("graph_match=1.00 (exact known router)")
+        breakdown.append("graph_match=1.00 (exact known router, specs match)")
+    elif similarity_score >= 0.95:
+        breakdown.append(
+            f"graph_match={graph_score:.2f} "
+            f"(known router, specs very close to stored version)"
+        )
+    elif similarity_score >= 0.30:
+        breakdown.append(
+            f"graph_match={graph_score:.2f} "
+            f"(known router name, but submitted specs differ — using your values)"
+        )
     elif similarity_score > 0:
         breakdown.append(
             f"graph_match={graph_score:.2f} "
-            f"(unknown router, cosine similarity={similarity_score:.2f})"
+            f"(unknown router, cosine similarity to closest known router)"
         )
     else:
         breakdown.append("graph_match=0.00 (no graph match, feature-only inference)")

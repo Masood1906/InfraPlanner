@@ -73,17 +73,65 @@ def map_to_graph(graph, spec: ParsedSpec, persist: bool = False) -> dict:
     is_new = not _router_exists(graph, spec.router_id)
 
     if not is_new:
+        # Router name exists in graph — check if submitted specs match stored specs
+        result = graph.query(
+            """
+            MATCH (m:RouterModel {id: $router_id})-[:HAS_FEATURE]->(f:RouterFeature)
+            RETURN f.name AS name, f.value AS value
+            """,
+            {"router_id": spec.router_id}
+        )
+        graph_features = {row[0]: float(row[1]) for row in result.result_set}
+        
+        # Compute spec similarity (how close are submitted values to stored values?)
+        spec_similarity = _compute_spec_similarity(spec.features, graph_features)
+        
+        # If specs are very close (≥95% similar), treat as exact match
+        if spec_similarity >= 0.95:
+            logger.info(
+                "Router '%s' exact match: name in graph, specs match (similarity=%.2f)",
+                spec.router_id, spec_similarity
+            )
+            if persist:
+                registry_saved = registry_save(spec_to_entry(spec))
+                if registry_saved:
+                    logger.info("Registry: saved router '%s' to router_registry.json", spec.router_id)
+            return {
+                "router_id":        spec.router_id,
+                "is_new":           False,
+                "is_similar":       False,
+                "similar_to":       None,
+                "similarity_score": 1.0,
+                "implied_weights":  _compute_instance_weights(spec),
+                "warnings":         warnings,
+            }
+        
+        # Specs differ — treat as a variant of the known router
+        # Inference uses submitted values, graph subgraph used as topology hint
+        logger.info(
+            "Router '%s' exists in graph but submitted specs differ (similarity=%.2f). "
+            "Using submitted specs for inference, graph subgraph for topology hint.",
+            spec.router_id, spec_similarity
+        )
+        
+        warnings.append(
+            f"Router '{spec.model}' is known, but submitted specs differ from the stored version "
+            f"({spec_similarity:.0%} similarity). Plan is based on your submitted values, "
+            f"not the stored specs."
+        )
+        
         if persist:
             registry_saved = registry_save(spec_to_entry(spec))
             if registry_saved:
-                logger.info("Registry: saved router '%s' to router_registry.json", spec.router_id)
+                logger.info("Registry: saved router '%s' variant to router_registry.json", spec.router_id)
+        
         return {
             "router_id":        spec.router_id,
             "is_new":           False,
-            "is_similar":       False,
-            "similar_to":       None,
-            "similarity_score": 1.0,
-            "implied_weights":  _compute_instance_weights(spec),
+            "is_similar":       True,
+            "similar_to":       spec.router_id,  # similar to itself (the stored version)
+            "similarity_score": spec_similarity,
+            "implied_weights":  _compute_instance_weights(spec),  # uses submitted values
             "warnings":         warnings,
         }
 
@@ -149,6 +197,51 @@ def map_to_graph(graph, spec: ParsedSpec, persist: bool = False) -> dict:
 
 
 # ── Similarity matching ────────────────────────────────────────────────────────
+
+def _compute_spec_similarity(submitted: list[ParsedFeature], graph_features: dict[str, float]) -> float:
+    """
+    Compute cosine similarity between submitted feature values and graph feature values.
+    Returns a value in [0.0, 1.0] where 1.0 = perfect match.
+    
+    IMPORTANT: Compares RAW canonical values, not normalized values.
+    This prevents false mismatches when both vectors normalize to similar ranges
+    but have different absolute magnitudes.
+    
+    This is used when a router name exists in the graph but the submitted specs differ.
+    It tells us how close the submitted variant is to the stored version.
+    """
+    if not graph_features:
+        return 1.0  # no graph data to compare against — treat as exact match
+    
+    # Build raw value vectors (canonical values, not normalized)
+    submitted_vec = {f.name: f.canonical_value for f in submitted}
+    
+    # Compute relative deviation for each feature
+    # If all features are within 5% of graph values, treat as exact match
+    deviations = []
+    for name, submitted_val in submitted_vec.items():
+        graph_val = graph_features.get(name)
+        if graph_val is None:
+            continue  # feature not in graph — skip
+        if graph_val == 0:
+            continue  # avoid division by zero
+        
+        # Relative deviation: |submitted - graph| / graph
+        deviation = abs(submitted_val - graph_val) / graph_val
+        deviations.append(deviation)
+    
+    if not deviations:
+        return 1.0  # no comparable features
+    
+    # Average deviation → similarity score
+    # deviation=0.0 → similarity=1.0
+    # deviation=1.0 (100% off) → similarity=0.0
+    # deviation=0.25 (25% off) → similarity=0.75
+    avg_deviation = sum(deviations) / len(deviations)
+    similarity = max(0.0, 1.0 - avg_deviation)
+    
+    return round(similarity, 4)
+
 
 def _find_similar_router(graph, spec: ParsedSpec) -> tuple[str, float] | None:
     result = graph.query(
