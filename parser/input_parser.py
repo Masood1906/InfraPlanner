@@ -130,6 +130,7 @@ def _extract(key: str, entry) -> tuple[float, str] | None:
     Accept either a plain number or {"value": x, "unit": y}.
     Returns None for optional fields submitted as 0 (treated as not provided).
     Raises ValueError for required fields with zero/negative values.
+    Validates that the unit is recognized.
     """
     if isinstance(entry, dict):
         if "value" not in entry:
@@ -142,6 +143,16 @@ def _extract(key: str, entry) -> tuple[float, str] | None:
             return None   # treat as not provided — skip silently
         raise ValueError(f"Field '{key}' value must be positive, got {val}")
     unit = str(entry.get("unit", "count")) if isinstance(entry, dict) else _default_unit(key)
+    
+    # Validate unit is recognized
+    from parser.normalizer import UNIT_CONVERSIONS
+    if unit.lower() not in UNIT_CONVERSIONS:
+        valid_units = sorted(set(u for u, _ in UNIT_CONVERSIONS.values()))
+        raise ValueError(
+            f"Field '{key}' has unrecognized unit '{unit}'. "
+            f"Valid units: {', '.join(valid_units)}"
+        )
+    
     return val, unit
 
 

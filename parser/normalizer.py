@@ -13,6 +13,7 @@ UNIT_CONVERSIONS: dict[str, tuple[str, float]] = {
     "gbps":  ("Gbps", 1.0),
     "mbps":  ("Gbps", 0.001),
     "mpps":  ("Mpps", 1.0),
+    "kpps":  ("Mpps", 0.001),
     "gpps":  ("Mpps", 1000.0),
     "gb":    ("GB",   1.0),
     "tb":    ("GB",   1024.0),
